@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:laundry_app/routes/app_routes.dart';
 import 'package:laundry_app/services/auth_services.dart';
 
 class SplashScreen extends StatefulWidget {
