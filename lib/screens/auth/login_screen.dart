@@ -60,37 +60,37 @@ class LoginScreen extends StatelessWidget {
                         passwordController.text.trim(),
                       );
 
-                      // Extract user ID from login response
-                      final userId = response['data']['user']['id'];
+                      // Extract user ID safely
+                      final userId = response['data']?['user']?['id'];
+
+                      if (userId == null) {
+                        throw Exception('User ID not found in response');
+                      }
+
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(
-                            'Login berhasil! Selamat datang ${response['data']['user']['name']}',
+                            'Login berhasil! Selamat datang ${response['data']?['user']?['name']}',
                           ),
                         ),
                       );
 
-                      // Check penyedia_layanan using user_id
-                      final penyediaResponse =
-                          await PenyediaLayananService.getPenyediaLayanan(
-                        page: 1,
-                        limit: 2,
-                        userId: userId,
-                      );
-
-                      // If data is empty, redirect to penyedia_layanan profile
-                      if ((penyediaResponse['data'] as List).isEmpty) {
+                      print('User ID: $userId');
+                      // Fetch penyedia layanan details safely
+                      final penyediaResponse = await PenyediaLayananService
+                              .getPenyediaLayananProfile(userId)
+                          .catchError((e) {
                         Navigator.pushReplacementNamed(
                           context,
                           AppRoutes.profileLayanan,
                         );
-                      } else {
-                        // Redirect to request layanan
-                        Navigator.pushReplacementNamed(
-                          context,
-                          AppRoutes.requestLayanan,
-                        );
-                      }
+                        ;
+                      });
+
+                      Navigator.pushReplacementNamed(
+                        context,
+                        AppRoutes.requestLayanan,
+                      );
                     } catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('Login gagal: ${e.toString()}')),

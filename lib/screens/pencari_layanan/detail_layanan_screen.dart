@@ -1,12 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:laundry_app/models/penyedia_layanan.dart';
+import 'package:laundry_app/screens/pencari_layanan/components/quisioner_formdb_screen.dart';
+import 'package:laundry_app/screens/pencari_layanan/components/quisioner_layanan_screen.dart';
 import 'package:laundry_app/services/penyedia_layanan_services.dart';
+import 'package:laundry_app/widgets/responsive_container.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class DetailLayananScreen extends StatefulWidget {
-  final int layananId;
-  const DetailLayananScreen({super.key, required this.layananId});
+  final int? layananId; // For database items
+  final dynamic gMapsData; // For Google Maps data
+  final bool isFromGMaps;
+
+  const DetailLayananScreen({
+    super.key,
+    this.layananId,
+    this.gMapsData,
+    required this.isFromGMaps,
+  });
 
   @override
   State<DetailLayananScreen> createState() => _DetailLayananScreenState();
@@ -14,18 +25,24 @@ class DetailLayananScreen extends StatefulWidget {
 
 class _DetailLayananScreenState extends State<DetailLayananScreen> {
   bool _isLoading = true;
-  PenyediaLayanan? _layanan;
+  PenyediaLayanan? _layanan; // For database items
 
   @override
   void initState() {
     super.initState();
-    _fetchLayananDetail();
+    if (!widget.isFromGMaps) {
+      _fetchLayananDetail();
+    } else {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   Future<void> _fetchLayananDetail() async {
     try {
       final layanan =
-          await PenyediaLayananService.getDetailLayanan(widget.layananId);
+          await PenyediaLayananService.getDetailLayanan(widget.layananId!);
       setState(() {
         _layanan = layanan;
         _isLoading = false;
@@ -56,84 +73,203 @@ class _DetailLayananScreenState extends State<DetailLayananScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Detail Layanan ${widget.layananId}'),
+        title: Text(widget.isFromGMaps
+            ? widget.gMapsData['name'] ?? 'Detail Layanan'
+            : _layanan?.namaToko ?? 'Detail Layanan'),
         backgroundColor: Colors.deepPurple,
       ),
       backgroundColor: Colors.black,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _layanan == null
-              ? const Center(
-                  child: Text(
-                    'Data tidak ditemukan',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                )
-              : Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildSectionTitle('Nama Toko'),
-                      _buildDetailText(_layanan!.namaToko),
-                      const SizedBox(height: 10),
-                      _buildSectionTitle('Deskripsi'),
-                      _buildDetailText(_layanan!.deskripsi),
-                      const SizedBox(height: 10),
-                      _buildSectionTitle('Alamat'),
-                      _buildDetailText(_layanan!.alamat),
-                      const SizedBox(height: 20),
-                      _buildSectionTitle('Lokasi'),
-                      SizedBox(
-                        height: 200,
-                        child: GoogleMap(
-                          initialCameraPosition: CameraPosition(
-                            target: LatLng(
-                              double.parse(_layanan!.lat),
-                              double.parse(_layanan!.long),
+          : ResponsiveContainer(
+              child: SingleChildScrollView(
+                child: widget.isFromGMaps
+                    ? _buildGMapsDetails()
+                    : _layanan == null
+                        ? const Center(
+                            child: Text(
+                              'Data tidak ditemukan',
+                              style: TextStyle(color: Colors.white),
                             ),
-                            zoom: 15,
-                          ),
-                          markers: {
-                            Marker(
-                              markerId: const MarkerId('location'),
-                              position: LatLng(
-                                double.parse(_layanan!.lat),
-                                double.parse(_layanan!.long),
-                              ),
-                              onTap: () => _redirectToGoogleMaps(
-                                _layanan!.lat,
-                                _layanan!.long,
-                              ),
-                            ),
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          _buildButton(
-                            label: 'Kembali',
-                            color: Colors.deepPurple,
-                            onPressed: () => Navigator.pop(context),
-                          ),
-                          _buildButton(
-                            label: 'Pesan',
-                            color: Colors.green,
-                            onPressed: () {
-                              // Handle redirect to ordering screen
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text('Redirect ke Pemesanan')),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                          )
+                        : _buildDatabaseDetails(),
+              ),
+            ),
+    );
+  }
+
+  /// Build UI for Google Maps data
+  Widget _buildGMapsDetails() {
+    final location = widget.gMapsData['geometry']?['location'];
+    final lat = location?['lat'];
+    final lng = location?['lng'];
+    final openingHours =
+        widget.gMapsData['current_opening_hours']?['weekday_text'] ?? [];
+    final ownerName = widget.gMapsData['name'] ?? 'Tidak tersedia';
+    final ownerPhone =
+        widget.gMapsData['international_phone_number'] ?? 'Tidak tersedia';
+    final ownerEmail = widget.gMapsData['email'] ?? 'Tidak tersedia';
+    final description =
+        widget.gMapsData['description'] ?? 'Deskripsi tidak tersedia';
+    final reviews = widget.gMapsData['reviews'] ?? [];
+
+    if (lat == null || lng == null) {
+      return const Center(
+        child: Text(
+          'Data lokasi tidak tersedia',
+          style: TextStyle(color: Colors.white),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle('Nama Toko'),
+        _buildDetailText(widget.gMapsData['name'] ?? 'Unknown'),
+        const SizedBox(height: 10),
+        _buildSectionTitle('Deskripsi'),
+        _buildDetailText(description),
+        const SizedBox(height: 10),
+        _buildSectionTitle('Alamat'),
+        _buildDetailText(
+            widget.gMapsData['formatted_address'] ?? 'Alamat tidak tersedia'),
+        const SizedBox(height: 10),
+        _buildSectionTitle('Pemilik'),
+        _buildDetailText('Nama: $ownerName'),
+        _buildDetailText('No HP: $ownerPhone'),
+        _buildDetailText('Email: $ownerEmail'),
+        const SizedBox(height: 20),
+        _buildSectionTitle('Lokasi'),
+        SizedBox(
+          height: 200,
+          child: GoogleMap(
+            initialCameraPosition: CameraPosition(
+              target: LatLng(lat, lng),
+              zoom: 15,
+            ),
+            markers: {
+              Marker(
+                markerId: const MarkerId('gmaps_location'),
+                position: LatLng(lat, lng),
+                onTap: () =>
+                    _redirectToGoogleMaps(lat.toString(), lng.toString()),
+              ),
+            },
+          ),
+        ),
+        const SizedBox(height: 20),
+        _buildSectionTitle('Rating & Ulasan'),
+        if (reviews.isNotEmpty)
+          Column(
+            children: reviews.map<Widget>((review) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildDetailText('⭐ ${review['rating']}'),
+                  _buildDetailText(review['text'] ?? 'Ulasan tidak tersedia'),
+                  const SizedBox(height: 10),
+                ],
+              );
+            }).toList(),
+          )
+        else
+          _buildDetailText('Tidak ada ulasan'),
+        const SizedBox(height: 20),
+        _buildSectionTitle('Jadwal Buka'),
+        if (openingHours.isNotEmpty)
+          Column(
+            children: openingHours.map<Widget>((day) {
+              return _buildDetailText(day);
+            }).toList(),
+          )
+        else
+          _buildDetailText('Jadwal tidak tersedia'),
+        const SizedBox(height: 20),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _buildButton(
+              label: 'Kembali',
+              color: Colors.deepPurple,
+              onPressed: () => Navigator.pop(context),
+            ),
+            _buildButton(
+              label: 'Pesan',
+              color: Colors.green,
+              onPressed: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) {
+                  return QuisionerLayananScreen(phoneNumber: ownerPhone);
+                }));
+              },
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// Build UI for database data
+  Widget _buildDatabaseDetails() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle('Nama Toko'),
+        _buildDetailText(_layanan!.namaToko),
+        const SizedBox(height: 10),
+        _buildSectionTitle('Deskripsi'),
+        _buildDetailText(_layanan!.deskripsi),
+        const SizedBox(height: 10),
+        _buildSectionTitle('Alamat'),
+        _buildDetailText(_layanan!.alamat),
+        const SizedBox(height: 10),
+        _buildSectionTitle('Pemilik'),
+        _buildDetailText('Nama: ${_layanan!.ownerName ?? 'Tidak tersedia'}'),
+        _buildDetailText('No HP: ${_layanan!.ownerPhone ?? 'Tidak tersedia'}'),
+        _buildDetailText('Email: ${_layanan!.ownerEmail ?? 'Tidak tersedia'}'),
+        const SizedBox(height: 20),
+        _buildSectionTitle('Lokasi'),
+        SizedBox(
+          height: 200,
+          child: GoogleMap(
+            initialCameraPosition: CameraPosition(
+              target: LatLng(_layanan!.lat, _layanan!.long),
+              zoom: 15,
+            ),
+            markers: {
+              Marker(
+                markerId: const MarkerId('db_location'),
+                position: LatLng(_layanan!.lat, _layanan!.long),
+                onTap: () => _redirectToGoogleMaps(
+                  _layanan!.lat.toString(),
+                  _layanan!.long.toString(),
                 ),
+              ),
+            },
+          ),
+        ),
+        const SizedBox(height: 20),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _buildButton(
+              label: 'Kembali',
+              color: Colors.deepPurple,
+              onPressed: () => Navigator.pop(context),
+            ),
+            _buildButton(
+              label: 'Pesan',
+              color: Colors.green,
+              onPressed: () {
+                print("Layanan ID: ${_layanan!.id}");
+                Navigator.push(context, MaterialPageRoute(builder: (context) {
+                  return CreatePesananScreen(id: _layanan!.id);
+                }));
+              },
+            ),
+          ],
+        ),
+      ],
     );
   }
 

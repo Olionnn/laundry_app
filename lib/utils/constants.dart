@@ -1,4 +1,4 @@
-const String baseUrl = "http://192.168.6.102:2222/api/v1";
+const String baseUrl = "http://192.168.6.106:2222/api/v1";
 const String appName = "NAMA APP";
 
 Map<String, String> globalHeaders = {
