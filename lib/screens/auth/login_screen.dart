@@ -19,9 +19,11 @@ class LoginScreen extends StatelessWidget {
           child: Column(
             children: [
               const Spacer(),
-              const Text(
-                'NAMA APP',
-                style: TextStyle(fontSize: 35, fontWeight: FontWeight.bold),
+              Image.asset(
+                'assets/images/IMG_7428-removebg-preview.png',
+                width: 300, // Adjust the width as needed
+                height: 300, // Adjust the height as needed
+                fit: BoxFit.contain, // Adjust how the image fits the box
               ),
               const SizedBox(height: 50),
               _buildTextField(

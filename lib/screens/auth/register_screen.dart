@@ -48,44 +48,48 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: ResponsiveContainer(
-        child: Column(
-          children: [
-            const Spacer(),
-            const Text(
-              'NAMA APP',
-              style: TextStyle(fontSize: 35, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 50),
-            _buildTextField('Nama', _nameController),
-            const SizedBox(height: 20),
-            _buildTextField('Email', _emailController),
-            const SizedBox(height: 20),
-            _buildTextField('Password', _passwordController, obscureText: true),
-            const SizedBox(height: 20),
-            _buildTextField('Nomor Handphone', _noHpController),
-            const SizedBox(height: 20),
-            _buildTextField('Alamat', _alamatController),
-            const SizedBox(height: 40),
-            _isLoading
-                ? const CircularProgressIndicator()
-                : ElevatedButton(
-                    onPressed: _handleRegister,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 10, horizontal: 40),
-                    ),
-                    child: const Text('REGISTER'),
-                  ),
-            const Spacer(),
-            GestureDetector(
-              onTap: () => Navigator.pushNamed(context, '/login'),
-              child: const Text(
-                'Sudah punya akun? Login',
-                style: TextStyle(fontSize: 12, color: Colors.grey),
+        child: SingleChildScrollView(
+          // Wrap the Column with SingleChildScrollView
+          child: Column(
+            children: [
+              Image.asset(
+                'assets/images/IMG_7428-removebg-preview.png',
+                width: 300, // Adjust the width as needed
+                height: 300, // Adjust the height as needed
+                fit: BoxFit.contain, // Adjust how the image fits the box
               ),
-            ),
-            const SizedBox(height: 20),
-          ],
+              _buildTextField('Nama', _nameController),
+              const SizedBox(height: 20),
+              _buildTextField('Email', _emailController),
+              const SizedBox(height: 20),
+              _buildTextField('Password', _passwordController,
+                  obscureText: true),
+              const SizedBox(height: 20),
+              _buildTextField('Nomor Handphone', _noHpController),
+              const SizedBox(height: 20),
+              _buildTextField('Alamat', _alamatController),
+              const SizedBox(height: 40),
+              _isLoading
+                  ? const CircularProgressIndicator()
+                  : ElevatedButton(
+                      onPressed: _handleRegister,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 10, horizontal: 40),
+                      ),
+                      child: const Text('REGISTER'),
+                    ),
+              const SizedBox(height: 20), // Add space before the login link
+              GestureDetector(
+                onTap: () => Navigator.pushNamed(context, '/login'),
+                child: const Text(
+                  'Sudah punya akun? Login',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
         ),
       ),
     );
