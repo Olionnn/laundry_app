@@ -13,8 +13,7 @@ class GMapsLayananScreen extends StatefulWidget {
 }
 
 class _GMapsLayananScreenState extends State<GMapsLayananScreen> {
-  final String apiKey =
-      'AIzaSyCw3vsFQ-pgLbJpiE2LsKK_L-6C4HzXBX0'; // Replace with your Google API Key
+  final String apiKey = 'APIKEY'; // Replace with your Google API Key
   final Location location = Location();
   bool _isLoading = false;
   List<dynamic> laundryPlaces = [];
@@ -214,9 +213,7 @@ class _GMapsLayananScreenState extends State<GMapsLayananScreen> {
                           ),
                           onTap: () async {
                             await _getDetailedPlaceData(place['place_id']);
-                          }
-
-                          ),
+                          }),
                     );
                   },
                 ),

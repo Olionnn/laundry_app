@@ -1,5 +1,5 @@
-const String baseUrl = "http://192.168.6.106:2222/api/v1";
-const String appName = "NAMA APP";
+const String baseUrl = "http://192.168.43.163:2222/api/v1";
+const String appName = "Cuci Aja";
 
 Map<String, String> globalHeaders = {
   'Content-Type': 'application/x-www-form-urlencoded',

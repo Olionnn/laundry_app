@@ -83,7 +83,7 @@ class _GoogleMapsPickerState extends State<GoogleMapsPicker> {
     // Start a new debounce
     _debounce = Timer(const Duration(milliseconds: 500), () async {
       final response = await http.get(Uri.parse(
-        'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$query&key=AIzaSyCw3vsFQ-pgLbJpiE2LsKK_L-6C4HzXBX0',
+        'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$query&key=APIKEY',
       ));
 
       if (response.statusCode == 200) {
@@ -108,7 +108,7 @@ class _GoogleMapsPickerState extends State<GoogleMapsPicker> {
   // Fetch detailed place information (latitude and longitude)
   Future<void> _fetchPlaceDetails(String placeId) async {
     final response = await http.get(Uri.parse(
-      'https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeId&key=AIzaSyCw3vsFQ-pgLbJpiE2LsKK_L-6C4HzXBX0',
+      'https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeId&key=APIKEY',
     ));
 
     if (response.statusCode == 200) {
